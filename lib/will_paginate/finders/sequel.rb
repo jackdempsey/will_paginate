@@ -8,15 +8,17 @@ module WillPaginate::Finders
     protected
 
     def wp_query(options, pager, args, &block)
-      find_options = options.except(:count, :offset, :limit, :all, :conditions, :order)
+      find_options = options.except(:count, :offset, :limit, :all, :conditions, :order, :select)
       #use dup below as the array thats passed around is changed later on
       find_options = options[:conditions].dup if options[:conditions]
 
-      result = if find_options.empty?
-        dataset.limit(pager.per_page, pager.offset)
-      else
-        dataset.filter(find_options).limit(pager.per_page, pager.offset)
-      end
+      result = dataset 
+
+      result = dataset.select(options[:select]) if options[:select] 
+
+      result = result.filter(find_options) unless find_options.empty?
+      
+      result = result.limit(pager.per_page, pager.offset)
 
       if options[:order]
         pager.replace result.order(options[:order]).all
@@ -30,10 +32,12 @@ module WillPaginate::Finders
     end
 
     def wp_count(options)
-      count_options = options.except(:count, :order, :limit, :offset, :conditions)
+      count_options = options.except(:count, :order, :limit, :offset, :conditions, :select)
       count_options = options[:conditions] if options[:conditions]
-      count_options.empty?? count() : filter(count_options).count
+      count_options.empty? ? count() : filter(count_options).count
     end
+
+
 
   end
 end

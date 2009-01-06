@@ -18,6 +18,12 @@ describe WillPaginate::Finders::Sequel do
     Car.should_not respond_to(:paginate_by_sql)
   end
 
+  it "should alter the select clauses through :select" do
+    result = Car.paginate(:select => "name as foo".lit, :page => 1, :per_page => 2, :order => :name)
+    result.size.should == 2
+    result.first.values[:foo].should == "Aston Martin"
+  end
+
   it "should not blow up with an explicit :all argument" do
     lambda { Car.paginate :page => nil, :count => nil }.should_not raise_error
   end
